@@ -12,6 +12,7 @@ me learn new concepts and strategies when analyzing the market. This application
 is different in that it's general group-chat base allows people to talk to as 
 many people as there are on the app.
 
+![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Main-Menu.png)
 ## Technology Used
 
 ### Firebase
