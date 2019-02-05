@@ -21,6 +21,7 @@ many people as there are on the app.
 This application uses Google Firebase to manage the data for user logins, registration,
 and saving messages for users to look at. 
 
+![alt text(https://camo.githubusercontent.com/bde5aa6ee0e1feec044d184a735da8024c60c04c/687474703a2f2f692e696d6775722e636f6d2f427771486842342e706e67)
 ### Chameleon Framework
 
 Allows for more subtle, easy-to-access color combinations and designs.
