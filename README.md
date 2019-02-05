@@ -33,6 +33,7 @@ Allows for more subtle, easy-to-access color combinations and designs.
 This API is a simple progress monitor that keeps rolling until an operation is 
 completed. In this project, it was used to let the user know that their account
 was still in the process of being created or logged into.
+
 ![alt text](https://camo.githubusercontent.com/6ed028acbf67707d622344e0ef1bc3b098425b50/687474703a2f2f662e636c2e6c792f6974656d732f32473146315a304d306b306832553356317033392f535650726f67726573734855442e676966)
 
 ## Upcoming Progress
