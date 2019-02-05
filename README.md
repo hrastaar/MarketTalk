@@ -21,7 +21,7 @@ many people as there are on the app.
 This application uses Google Firebase to manage the data for user logins, registration,
 and saving messages for users to look at. My application relies heavily on Firebase to 
 communicate with the user.
-![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Firebase-logo.png)
+![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Firebase-logo.jpg)
 
 ### Chameleon Framework
 
