@@ -15,7 +15,8 @@ many people as there are on the app.
 ![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Main-Menu.png)
 ## Technology Used
 
-### Firebase ![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Firebase-logo.png)
+![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Firebase-logo.png)
+### Firebase
 
 This application uses Google Firebase to manage the data for user logins, registration,
 and saving messages for users to look at. 
