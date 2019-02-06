@@ -1,4 +1,4 @@
-![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/bull-image.png)
+![alt text](https://raw.githubusercontent.com/hrastaar/MarketTalk/master/Untitled%20design.png)
 # MarketTalk Application 
 MarketTalk is an iOS application that is essentially a chatroom for people to join
 and learn more about the stock market. People can interact with each other and ask
