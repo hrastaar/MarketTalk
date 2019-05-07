@@ -21,6 +21,7 @@ public:
 	// constructor
 	BloomFilter(unsigned int m) : size(m), filter(m, false) {}
 
+	~BloomFilter() {};
 	// only true if the three different hash values exist
 	bool find(std::string string1);
 	// insert into the three different positions
