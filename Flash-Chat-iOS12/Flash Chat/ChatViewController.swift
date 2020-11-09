@@ -8,54 +8,62 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     // Declare instance variables here
     var messageArr : [Message] = [Message]()
-    
+    var teamInfo: TeamData?
+    let db = Firestore.firestore()
     // Control height constraints of messenger section
-    @IBOutlet var heightConstraint: NSLayoutConstraint!
-    // For the send button
-    @IBOutlet var sendButton: UIButton!
-    // Message storage
-    @IBOutlet var messageTextfield: UITextField!
-    // Table
-    @IBOutlet var messageTableView: UITableView!
     
+    @IBOutlet weak var heightConstraint: NSLayoutConstraint!
+    @IBOutlet weak var sendButton: UIButton!
     
+    @IBOutlet weak var messageTextfield: UITextField!
+    @IBOutlet weak var messageTableView: UITableView!
+    @IBOutlet weak var messageActionsView: UIView!
+    var username: String?
+    var preferredClub: String? 
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        messageTableView.delegate = self
         messageTableView.dataSource = self
         messageTextfield.delegate = self
-        
+        messageTextfield.backgroundColor = .white
+        if let teamColors = teamColors[self.teamInfo!.team] {
+            messageActionsView.backgroundColor = UIColor(hexString: teamColors[0])
+            messageTableView.separatorColor = UIColor(hexString: teamColors[0])
+
+        }
         // lets you know when tapped
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tableViewTapped))
         messageTableView.addGestureRecognizer(tapGesture)
 
-        messageTableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier: "customMessageCell")
-        configureTableView()
+        messageTableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier:  "ReusableCell")
         retrieveMessages()
-        
-        messageTableView.separatorStyle = .none
     }
     
     //MARK: - TableView DataSource Methods
-    
-
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "customMessageCell", for: indexPath) as! CustomMessageCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ReusableCell", for: indexPath) as! MessageCell
         // User settings default
         cell.messageBody.text = messageArr[indexPath.row].message
         cell.senderUsername.text = messageArr[indexPath.row].sender
-        cell.avatarImageView.image = UIImage(named: "bull")
+        let imageString = "AssetBundle.bundle/" + messageArr[indexPath.row].club + ".png"
+        cell.avatarImageView.image = UIImage(named: imageString)
         // if looking at own message from own phone
-        if(cell.senderUsername.text == Auth.auth().currentUser?.email!){
-            // Own message showing
-            cell.avatarImageView.backgroundColor = UIColor.flatGray()
-            cell.messageBackground.backgroundColor = UIColor.flatMint()
-        }
-        // if viewing other person's message
-        else{
+        if let currUser = username {
+            if(cell.senderUsername.text == currUser){
+                // Own message showing
+                cell.avatarImageView.backgroundColor = UIColor.flatGray()
+                cell.messageBackground.backgroundColor = UIColor.flatMint()
+            }
+            // if viewing other person's message
+            else{
+                cell.avatarImageView.backgroundColor = UIColor.flatBlue()
+                cell.messageBackground.backgroundColor = UIColor.flatGray()
+            }
+        } else {
             cell.avatarImageView.backgroundColor = UIColor.flatBlue()
             cell.messageBackground.backgroundColor = UIColor.flatGray()
         }
+        
         return cell
     }
     
@@ -70,24 +78,11 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         messageTextfield.endEditing(true)
     }
     
-    // simple tableview settings
-    func configureTableView() {
-        messageTableView.rowHeight = UITableView.automaticDimension
-        messageTableView.estimatedRowHeight = 120
-    }
-    
-    //MARK:- TextField Delegate Methods
-    
-    
-
-    
     // Move keyboard when you want to type
     func textFieldDidBeginEditing(_ textField: UITextField) {
-
         UIView.animate(withDuration: 0.4){
             self.heightConstraint.constant = 308
             self.view.layoutIfNeeded()
-            
         }
     }
     
@@ -99,74 +94,68 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
     }
 
-    
     //MARK: - Send & Recieve from Firebase
-    
-    @IBAction func sendPressed(_ sender: AnyObject) {
-
+    @IBAction func sendPressed(_ sender: Any) {
+        if(self.username == nil) {
+            print("User was nil, so can't post")
+            return
+        }
         // Sending messages to Firebase DB
         messageTextfield.endEditing(true)
         messageTextfield.isEnabled = false
         sendButton.isEnabled = false
         
-        // enter specific child of Messages
-        let messagesDB = Database.database().reference().child("Messages")
-        // create a constant to hold sender and message text
-        let messageDictionary = ["Sender": Auth.auth().currentUser?.email, "MessageBody": messageTextfield.text!]
-        // creates random key for messages so they are all unique
-        messagesDB.childByAutoId().setValue(messageDictionary)
-        {
-           (error, reference) in
-            if error != nil
-            {
-                print(error!)
+        if let messageBody = messageTextfield.text, let messageSender = self.username, let messageClub = self.preferredClub {
+            db.collection(self.teamInfo!.team).addDocument(data: [
+                "sender" : messageSender,
+                "body" : messageBody,
+                "club" : messageClub,
+                "dateField" : Date().timeIntervalSince1970
+            ]) { (error) in
+                if error != nil {
+                    print("Issue occurred when saving data to firestore")
+                } else {
+                    print("Successfully saved data")
+                    
+                    DispatchQueue.main.async {
+                        self.messageTextfield.text = ""
+                    }
+                }
             }
-            else{
-                print("Message saved successfully!")
-                
-                self.messageTextfield.isEnabled = true
-                self.sendButton.isEnabled = true
-                self.messageTextfield.text = ""
-            }
-        }// creates random key for messages so they are all unique
-        
+        }
     }
-    
+
     // this function retreieves messages to showcase
     func retrieveMessages() {
-        let messageDB = Database.database().reference().child("Messages")
-        // whenever a new entry added to messages DB
-        messageDB.observe(.childAdded) { (snapshot) in
-            let value_of_snapshot = snapshot.value as! Dictionary<String,String>
+        db.collection(self.teamInfo!.team)
+            .order(by: "dateField")
+            .addSnapshotListener { (querySnapshot, error) in
             
-            let textConst = value_of_snapshot["MessageBody"]!
-            let sender = value_of_snapshot["Sender"]!
-            let fullMessageInfo = Message()
-            fullMessageInfo.sender = sender
-            fullMessageInfo.message = textConst
+            self.messageArr = []
             
-            self.messageArr.append(fullMessageInfo)
-            
-            self.configureTableView()
-            self.messageTableView.reloadData()
-    }
-    
-
-    }
-    
-    // IBAction for when user presses the log-out button
-    @IBAction func logOutPressed(_ sender: AnyObject) {
-        
-        //TODO: Log out the user and send them back to WelcomeViewController
-        do {
-            try Auth.auth().signOut()
-            navigationController?.popToRootViewController(animated: true)
-        }
-        catch {
-            print("Error, problem signing out")
+            if let e = error {
+                print("There was an issue retrieving data from Firestore. \(e)")
+            } else {
+                if let snapshotDocuments = querySnapshot?.documents {
+                    for doc in snapshotDocuments {
+                        let data = doc.data()
+                        if let messageSender = data["sender"] as? String, let messageBody = data["body"] as? String, let messageClub = data["club"] as? String {
+                            let newMessage = Message()
+                            newMessage.message = messageBody
+                            newMessage.sender = messageSender
+                            newMessage.club = messageClub
+                            self.messageArr.append(newMessage)
+                            
+                            DispatchQueue.main.async {
+                                   self.messageTableView.reloadData()
+                                let indexPath = IndexPath(row: self.messageArr.count - 1, section: 0)
+                                self.messageTableView.scrollToRow(at: indexPath, at: .top, animated: false)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    
-
 
 }
